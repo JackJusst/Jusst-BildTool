@@ -1,4 +1,4 @@
-name: Build Windows Portable
+name: Package Windows Python Launcher
 
 on:
   workflow_dispatch:
@@ -6,33 +6,22 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  package:
     runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Build portable Windows app
-        run: |
-          pyinstaller --noconfirm --clean --windowed --onedir --name JusstBildTool JusstBildTool.py
-
-      - name: Add start file
+      - name: Prepare package
         shell: pwsh
         run: |
-          Set-Content -Path "dist/JusstBildTool/START_JusstBildTool.cmd" -Encoding ASCII -Value '@echo off`r`nstart "" "%~dp0JusstBildTool.exe"'
+          New-Item -ItemType Directory -Force -Path package | Out-Null
+          Copy-Item JusstBildTool.py package/JusstBildTool.py
+          Copy-Item START_JusstBildTool.cmd package/START_JusstBildTool.cmd
+          Copy-Item requirements.txt package/requirements.txt
 
-      - name: Upload portable Windows package
+      - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: JusstBildTool-Windows-Portable
-          path: dist/JusstBildTool/
+          name: JusstBildTool-START
+          path: package/
